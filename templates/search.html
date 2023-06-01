@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title%}<title>Notes | search</title>{% endblock %}
+
+{% block side %}
+<h1><a href="/">List of Notebooks</a></h1>
+<br>
+<a href="/notebook/create" class="buttonlike">+ Create a new Notebook</a>
+{% endblock %}
+
+{% block main %}
+{% if not notebook_available %}
+<div>
+{%if alertMsg %}
+<h1 style="color: red;">{{alertMsg}}</h1>
+{% endif %}
+<form action="/search" method="post">
+<div style="display: inline-block;">
+<span>Enter your research:</span>
+<input text="search" name="search">
+</div>
+
+<br>
+<div>
+<span>Enter the captcha:</span>
+<br>
+<img src="data:image/png;base64, {{captcha}}" alt="captcha" />
+<input type="text" name="captcha">
+</div>
+<button type="submit">Research</button>
+</form>
+<hr>
+<div>
+    {%if hasResult %}
+    <span>Result Found</span>
+    {%else%}
+    <span>Result not found</span>
+    {%endif%}
+</div>
+<hr>
+</div>
+{% endif%}
+{% endblock %}

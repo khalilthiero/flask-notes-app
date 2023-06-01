@@ -1,10 +1,16 @@
 import datetime
 import hashlib
-from flask import Flask, render_template, redirect, url_for, request
+import uuid
+from flask import Flask, render_template, redirect, url_for, request, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
+from captcha.image import ImageCaptcha
+import random
+import base64
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+app.config["SECRET_KEY"] = "lkqpsqouvfyp!!AZIAOU112342OIQH"
 
 db = SQLAlchemy(app)
 
@@ -226,6 +232,39 @@ def delete_section(notebook_id, note_id, section_id):
 
     return render_template("delete_section.html", notebook=notebook_id, note=note_id, section=Section.query.get(section_id))
 
+
+@app.route('/search', methods=['GET','POST'])
+def example():
+    hasResult=False
+    alertMsg=""
+    if request.method == 'POST':
+        if session['captcha']==request.form.get("captcha",""):
+            searchValue=request.form.get("search","")
+            if not searchValue:
+                alertMsg="You have to type something"
+            else:
+                condition="name like '%?%'"
+                queryType="SELECT"
+                notes=" notes "
+                query=queryType+" "
+                query+="*  "
+                query+="from"
+                query+=notes+" where "
+                query+=condition.replace('?', searchValue)
+                query=text(query)
+                try:
+                    hasResult=True if db.session.execute(query).first() else False
+                except:
+                    hasResult=False
+        else:
+            alertMsg="Invalid captcha"
+    
+    captcha = ImageCaptcha(width = 280, height = 90)
+    captcha_text = ''.join(random.choice('0123456789ABCDEF') for i in range(8))
+    captchaImg = base64.b64encode(captcha.generate(captcha_text).read()).decode('utf-8')
+    session['captcha']=captcha_text
+    
+    return render_template('search.html',captcha=captchaImg,hasResult=hasResult,alertMsg=alertMsg)
 
 if __name__ == "__main__":
     app.run(debug=True)
